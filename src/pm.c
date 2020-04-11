@@ -47,13 +47,14 @@ char pm_read (unsigned int physical_address)
 {
   read_count++;
   /* ¡ TODO: COMPLÉTER ! */
-  return '!';
+  return pm_memory[physical_address];
 }
 
 void pm_write (unsigned int physical_address, char c)
 {
   write_count++;
   /* ¡ TODO: COMPLÉTER ! */
+  pm_memory[physical_address] = c;
 }
 
 
