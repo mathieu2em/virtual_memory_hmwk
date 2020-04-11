@@ -26,9 +26,10 @@ void pm_download_page (unsigned int page_number, unsigned int frame_number)
 {
   download_count++;
   /* ¡ TODO: COMPLÉTER ! */
-  unsigned int offset = page_number * PAGE_FRAME_SIZE;
-  fseek(pm_backing_store, offset, SEEK_SET);
-  fread(pm_memory + offset, sizeof(char), PAGE_FRAME_SIZE, pm_backing_store);
+  unsigned int page_offset = page_number * PAGE_FRAME_SIZE;
+  unsigned int frame_offset = frame_number * PAGE_FRAME_SIZE;
+  fseek(pm_backing_store, page_offset, SEEK_SET);
+  fread(pm_memory + frame_offset, sizeof(char), PAGE_FRAME_SIZE, pm_backing_store);
 }
 
 // Sauvegarde la frame spécifiée dans la page du backing store
@@ -36,6 +37,10 @@ void pm_backup_page (unsigned int frame_number, unsigned int page_number)
 {
   backup_count++;
   /* ¡ TODO: COMPLÉTER ! */
+  unsigned int page_offset = page_number * PAGE_FRAME_SIZE;
+  unsigned int frame_offset = frame_number * PAGE_FRAME_SIZE;
+  fseek(pm_backing_store, page_offset, SEEK_SET);
+  fwrite(pm_memory + frame_offset, sizeof(char), PAGE_FRAME_SIZE, pm_backing_store);
 }
 
 char pm_read (unsigned int physical_address)
