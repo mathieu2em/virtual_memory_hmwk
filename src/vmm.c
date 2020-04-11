@@ -72,8 +72,8 @@ void vmm_write (unsigned int laddress, char c)
   write_count++;
   /* ¡ TODO: COMPLÉTER ! */
   // calculer le num de page et le num de offset
-  unsigned int page = laddress/PAGE_FRAME_SIZE;
-  unsigned int offset = laddress%PAGE_FRAME_SIZE;
+  unsigned int page = laddress / PAGE_FRAME_SIZE;
+  unsigned int offset = laddress % PAGE_FRAME_SIZE;
 
   int frame = tlb_lookup(page, true);
   if (frame == -2) {
@@ -93,7 +93,6 @@ void vmm_write (unsigned int laddress, char c)
                    paddress,
                    c);
 }
-
 
 // NE PAS MODIFIER CETTE FONCTION
 void vmm_clean (void)

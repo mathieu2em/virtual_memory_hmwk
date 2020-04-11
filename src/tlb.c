@@ -1,4 +1,3 @@
-
 #include <stdint.h>
 #include <stdio.h>
 
@@ -13,8 +12,17 @@ struct tlb_entry
     bool readonly : 1;
 };
 
+
+struct clock
+{
+    bool reference : 1;
+    bool modify : 1;
+    int page_number;
+    struct clock *next;
+};
+
 static FILE *tlb_log = NULL;
-static struct tlb_entry tlb_entries[TLB_NUM_ENTRIES]; 
+static struct tlb_entry tlb_entries[TLB_NUM_ENTRIES];
 
 static unsigned int tlb_hit_count = 0;
 static unsigned int tlb_miss_count = 0;
@@ -29,16 +37,26 @@ void tlb_init (FILE *log)
 }
 
 /******************** ¡ NE RIEN CHANGER CI-DESSUS !  ******************/
+static struct clock clock_head[TLB_NUM_ENTRIES];
 
 /* Recherche dans le TLB.
  * Renvoie le `frame_number`, si trouvé, ou un nombre négatif sinon.  */
+// TODO set reference bit to one in clock and if write modify modify_bit to true too
 static int tlb__lookup (unsigned int page_number, bool write)
 {
     // TODO: COMPLÉTER CETTE FONCTION.
     for (int i = 0; i < TLB_NUM_ENTRIES; i++) {
-        if (tlb_entries[i].page_number == page_number )
-            return (!write || (write && !tlb_entries[i].readonly)) ?
-                tlb_entries[i].frame_number : -2;
+        if (tlb_entries[i].page_number == page_number ) {
+            clock_head[i].reference = true;
+            if (write) {
+                if (!tlb_entries[i].readonly) {
+                    clock_head[i].modify = true;
+                } else {
+                    return -2;
+                }
+            }
+            return tlb_entries[i].frame_number;
+        }
     }
     return -1;
 }
@@ -58,6 +76,11 @@ static void tlb__add_entry (unsigned int page_number,
         }
     }
     puts("WE FUCKED UP");
+}
+
+/* implementation of second chance's enhanced algorithm. yeah. */
+int page_replacement (unsigned int page_number) {
+
 }
 
 /******************** ¡ NE RIEN CHANGER CI-DESSOUS !  ******************/
