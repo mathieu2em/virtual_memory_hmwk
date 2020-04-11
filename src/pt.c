@@ -46,6 +46,8 @@ static int pt__lookup (unsigned int page_number)
 static void pt__set_entry (unsigned int page_number, unsigned int frame_number)
 {
     // TODO: COMPLÉTER CETTE FONCTION.
+    if (!page_table[page_number].readonly)
+        page_table[page_number].frame_number = frame_number;
 }
 
 /* Marque l'entrée de `page_number` dans la page table comme invalide.  */
