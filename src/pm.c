@@ -26,6 +26,9 @@ void pm_download_page (unsigned int page_number, unsigned int frame_number)
 {
   download_count++;
   /* ¡ TODO: COMPLÉTER ! */
+  unsigned int offset = page_number * PAGE_FRAME_SIZE;
+  fseek(pm_backing_store, offset, SEEK_SET);
+  fread(pm_memory + offset, sizeof(char), PAGE_FRAME_SIZE, pm_backing_store);
 }
 
 // Sauvegarde la frame spécifiée dans la page du backing store
