@@ -57,7 +57,7 @@ static void tlb__add_entry (unsigned int page_number,
             return;
         }
     }
-    printf("WE FUCKED UP\n");
+    puts("WE FUCKED UP");
 }
 
 /******************** ¡ NE RIEN CHANGER CI-DESSOUS !  ******************/
