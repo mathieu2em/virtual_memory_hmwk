@@ -49,6 +49,15 @@ static void tlb__add_entry (unsigned int page_number,
                             unsigned int frame_number, bool readonly)
 {
     // TODO: COMPLÉTER CETTE FONCTION.
+    for(int i = 0; i < TLB_NUM_ENTRIES; i++){
+        if (tlb_entries[i].frame_number < 0) {
+            tlb_entries[i].page_number = page_number;
+            tlb_entries[i].frame_number = frame_number;
+            tlb_entries[i].readonly = readonly;
+            return;
+        }
+    }
+    printf("WE FUCKED UP\n");
 }
 
 /******************** ¡ NE RIEN CHANGER CI-DESSOUS !  ******************/
