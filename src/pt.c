@@ -54,19 +54,21 @@ static void pt__set_entry (unsigned int page_number, unsigned int frame_number)
 void pt_unset_entry (unsigned int page_number)
 {
     // TODO: COMPLÉTER CETTE FONCTION.
+    page_table[page_number].valid = 0;
 }
 
 /* Renvoie si `page_number` est `readonly`.  */
 bool pt_readonly_p (unsigned int page_number)
 {
     // TODO: COMPLÉTER CETTE FONCTION.
-    return true;
+    return page_table[page_number].readonly ? true : false;
 }
 
 /* Change l'accès en écriture de `page_number` selon `readonly`.  */
 void pt_set_readonly (unsigned int page_number, bool readonly)
 {
     // TODO: COMPLÉTER CETTE FONCTION.
+    page_table[page_number].readonly = readonly;
 }
 
 
