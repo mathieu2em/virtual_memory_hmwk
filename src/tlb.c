@@ -52,9 +52,6 @@ static int tlb__lookup (unsigned int page_number, bool write)
 static void tlb__add_entry (unsigned int page_number,
                             unsigned int frame_number, bool readonly)
 {
-    // on garde un pointeur vers lindex de clock
-    // on lincremente mod la table size a toute les fois quon add entry
-    // 
 
     // TODO: COMPLÉTER CETTE FONCTION.
     for(int i = 0; i < TLB_NUM_ENTRIES; i++){

@@ -67,6 +67,7 @@ char vmm_read (unsigned int laddress)
         frame = pt_lookup(page);
         if ( frame < 0) {
             // page_fault
+            
         }
     }
     clock[page].reference = true;
