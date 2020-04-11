@@ -36,9 +36,9 @@ static int tlb__lookup (unsigned int page_number, bool write)
 {
     // TODO: COMPLÉTER CETTE FONCTION.
     for (int i = 0; i < TLB_NUM_ENTRIES; i++) {
-        if (tlb_entries[i].page_number == page_number) {
-            return tlb_entries[i].frame_number;
-        }
+        if (tlb_entries[i].page_number == page_number )
+            return (!write || (write && !tlb_entries[i].readonly)) ?
+                tlb_entries[i].frame_number : -2;
     }
     return -1;
 }

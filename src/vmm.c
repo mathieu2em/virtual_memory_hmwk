@@ -42,9 +42,27 @@ char vmm_read (unsigned int laddress)
   char c = '!';
   read_count++;
   /* ¡ TODO: COMPLÉTER ! */
+  // calculer le num de page et le num de offset
+  unsigned int page = laddress/PAGE_FRAME_SIZE;
+  unsigned int offset = laddress%PAGE_FRAME_SIZE;
+
+  int frame = tlb_lookup(page, false);
+  if (frame < 0) {
+      puts("TLB_MISS");
+      // call le shit de tlb miss TODO
+  }
+  int paddress = frame * PAGE_FRAME_SIZE + offset;
+
+  c = pm_read(paddress);
 
   // TODO: Fournir les arguments manquants.
-  vmm_log_command (stdout, "READING", laddress, 0, 0, 0, 0, c);
+  vmm_log_command (stdout, "READING",
+                   laddress,
+                   page,
+                   frame,
+                   offset,
+                   paddress,
+                   c);
   return c;
 }
 
@@ -53,9 +71,27 @@ void vmm_write (unsigned int laddress, char c)
 {
   write_count++;
   /* ¡ TODO: COMPLÉTER ! */
+  // calculer le num de page et le num de offset
+  unsigned int page = laddress/PAGE_FRAME_SIZE;
+  unsigned int offset = laddress%PAGE_FRAME_SIZE;
 
-  // TODO: Fournir les arguments manquants.
-  vmm_log_command (stdout, "WRITING", laddress, 0, 0, 0, 0, c);
+  int frame = tlb_lookup(page, true);
+  if (frame == -2) {
+      error ("trying to write in readonly page (%d)\n", page);
+  } else if (frame < 0) {
+      // TODO tlb_miss
+  }
+  int paddress = frame * PAGE_FRAME_SIZE + offset;
+
+  pm_write(paddress, c);
+
+  vmm_log_command (stdout, "WRITING",
+                   laddress,
+                   page,
+                   frame,
+                   offset,
+                   paddress,
+                   c);
 }
 
 
