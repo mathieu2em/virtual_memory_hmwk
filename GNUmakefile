@@ -1,4 +1,4 @@
-BUILD_DIR=build
+BUILD_DIR=.
 CC=gcc
 CFLAGS=-g -std=gnu99 -Wall -pedantic -Isrc -I$(BUILD_DIR)
 LDFLAGS=
@@ -18,7 +18,7 @@ OBJS = tlb.o parse.tab.o vmm.o pm.o pt.o tokens.o common.o
 
 default: all
 
-all: $(BUILD_DIR)/vmm rapport.pdf
+all: $(BUILD_DIR)/vmm
 
 $(BUILD_DIR)/vmm: $(patsubst %.o, $(BUILD_DIR)/%.o, $(OBJS))
 	$(CC) $(LDFLAGS) -o $@ $(patsubst %.o,$(BUILD_DIR)/%.o, $(OBJS))
@@ -39,7 +39,7 @@ run: all
 	$(BUILD_DIR)/vmm tests/BACKING_STORE.txt <tests/command.in
 
 clean:
-	$(RM) -r $(BUILD_DIR) *.aux *.log
+	$(RM) -rf *.aux *.log *.o
 
 %.pdf: %.tex
 	pdflatex $<

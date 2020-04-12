@@ -49,7 +49,7 @@ static int tlb__lookup (unsigned int page_number, bool write)
     // TODO: COMPLÉTER CETTE FONCTION.
     for (int i = 0; i < TLB_NUM_ENTRIES; i++) {
         if (tlb_entries[i].page_number == page_number ) {
-            if (write)
+            if (write )
                 tlb_entries[i].readonly = false;
             stk_move_to_top(i);
             return tlb_entries[i].frame_number;

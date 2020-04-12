@@ -19,17 +19,17 @@ static FILE* vmm_log;
 struct clock_entry
 {
     bool reference : 1;
-    bool modify : 1;
+    int page_number;
 };
 
-static struct clock_entry clock[NUM_PAGES];
+static struct clock_entry clock[NUM_FRAMES];
 
 void vmm_init (FILE *log)
 {
     // Initialise le clock.
-    for (int i = 0; i < TLB_NUM_ENTRIES; i++) {
+    for (int i = 0; i < NUM_FRAMES; i++) {
         clock[i].reference    =  0;
-        clock[i].modify       =  0;
+        clock[i].page_number  = -1;
     }
     // Initialise le fichier de journal.
     vmm_log = log;
@@ -50,7 +50,35 @@ static void vmm_log_command (FILE *out, const char *command,
                  page, offset, frame, paddress);
 }
 
-int page_replacement (unsigned int);
+/* implementation of second chance's enhanced algorithm. yeah. */
+int page_replacement (unsigned int page_number)
+{
+    // you pass max 2 times upon the structure
+    bool passed = false;
+    int i = 0;
+    while(true) {
+        // if you find 1 no ref no modif
+        if (!clock[i].reference &&
+            (clock[i].page_number < 0 || !pt_readonly_p(clock[i].page_number) || passed)) {
+            if (clock[i].page_number >= 0) {
+                pt_unset_entry(clock[i].page_number);
+
+                if (pt_readonly_p(clock[i].page_number)) {
+                    pm_backup_page(i, clock[i].page_number);
+                }
+            }
+            pt_set_entry(page_number, i);
+            clock[i].page_number = page_number;
+            return i;
+        }
+        clock[i].reference = 0;
+        i++;
+        if (i == NUM_FRAMES) {
+            passed = true;
+        }
+        i %= NUM_FRAMES;
+    }
+}
 
 /* Effectue une lecture à l'adresse logique `laddress`.  */
 char vmm_read (unsigned int laddress)
@@ -64,16 +92,17 @@ char vmm_read (unsigned int laddress)
 
     int frame = tlb_lookup(page, false);
     if (frame < 0) {
-        puts("TLB_MISS");
         // call le shit de tlb miss TODO
         frame = pt_lookup(page);
         if ( frame < 0) {
             // page_fault page replacement devrais retourner le frame
             frame = page_replacement(page);
+            pm_download_page(page, frame);
+            pt_set_readonly(page, true);
         }
-        tlb_add_entry(page, frame, true);
+        tlb_add_entry(page, frame, pt_readonly_p(page));
     }
-    clock[page].reference = true;
+    clock[frame].reference = true;
 
     int paddress = frame * PAGE_FRAME_SIZE + offset;
 
@@ -100,18 +129,18 @@ void vmm_write (unsigned int laddress, char c)
     unsigned int offset = laddress % PAGE_FRAME_SIZE;
 
     int frame = tlb_lookup(page, true);
-    if (frame == -2) {
-        error ("trying to write in readonly page (%d)\n", page);
-    } else if (frame < 0) {
+    if (frame < 0) {
         frame = pt_lookup(page);
         if (frame < 0) {
             // page miss
             frame = page_replacement(page);
+            pm_download_page(page, frame);
+            pt_set_readonly(page, false);
         }
-        tlb_add_entry(page, frame, false);
+        tlb_add_entry(page, frame, pt_readonly_p(page));
     }
-    clock[page].reference = true;
-    clock[page].modify    = true;
+    clock[frame].reference = true;
+    pt_set_readonly(page, true);
 
     int paddress = frame * PAGE_FRAME_SIZE + offset;
 
@@ -124,29 +153,6 @@ void vmm_write (unsigned int laddress, char c)
                      offset,
                      paddress,
                      c);
-}
-
-/* implementation of second chance's enhanced algorithm. yeah. */
-int page_replacement (unsigned int page_number)
-{
-    // you pass max 2 times upon the structure
-    bool passed = false;
-    int i = 0;
-    while(true) {
-        // if you find 1 no ref no modif
-        if (!clock[i].reference && (!clock[i].modify || passed)) {
-            // on switch le shit
-            if (clock[i].modify) {
-                pm_backup_page(clock[i].frame_number, clock[i].page_number);
-            }
-        }
-        clock[i].reference = 0;
-        i++;
-        if (i == TLB_NUM_ENTRIES) {
-            passed = true;
-        }
-        i %= TLB_NUM_ENTRIES;
-    }
 }
 
 // NE PAS MODIFIER CETTE FONCTION
