@@ -1,4 +1,4 @@
-BUILD_DIR=.
+BUILD_DIR=build
 CC=gcc
 CFLAGS=-g -std=gnu99 -Wall -pedantic -Isrc -I$(BUILD_DIR)
 LDFLAGS=
@@ -37,12 +37,12 @@ $(BUILD_DIR)/tokens.c: src/tokens.l
 
 run: all
 	$(BUILD_DIR)/vmm tests/BACKING_STORE.txt <tests/command.in
+	
+vg: all
+	valgrind --show-leak-kinds=all $(BUILD_DIR)/vmm tests/BACKING_STORE.txt <tests/command.in
 
 clean:
-	$(RM) -rf *.aux *.log *.o
-
-%.pdf: %.tex
-	pdflatex $<
+	$(RM) -r $(BUILD_DIR) *.aux *.log
 
 release:
 	$(TAR) -czv -f tp3.tar.gz --transform 's|^|tp3/|' \

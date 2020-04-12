@@ -1,3 +1,7 @@
+/*
+  Amine   Sami   20086365
+  Mathieu Perron 20076170
+*/
 #include <stdint.h>
 #include <stdio.h>
 
