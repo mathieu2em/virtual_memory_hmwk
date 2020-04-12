@@ -39,11 +39,11 @@ void vmm_init (FILE *log)
 // NE PAS MODIFIER CETTE FONCTION
 static void vmm_log_command (FILE *out, const char *command,
                              unsigned int laddress, /* Logical address. */
-		             unsigned int page,
+                             unsigned int page,
                              unsigned int frame,
                              unsigned int offset,
                              unsigned int paddress, /* Physical address.  */
-		             char c) /* Caractère lu ou écrit.  */
+                             char c) /* Caractère lu ou écrit.  */
 {
     if (out)
         fprintf (out, "%s[%c]@%05d: p=%d, o=%d, f=%d pa=%d\n", command, c, laddress,
@@ -53,29 +53,31 @@ static void vmm_log_command (FILE *out, const char *command,
 /* implementation of second chance's enhanced algorithm. yeah. */
 int page_replacement (unsigned int page_number)
 {
-    // you pass max 2 times upon the structure
-    bool passed = false;
+    bool passed = false; // flag for second encounter
     int i = 0;
     while(true) {
-        // if you find 1 no ref no modif
-        if (!clock[i].reference &&
-            (clock[i].page_number < 0 || !pt_readonly_p(clock[i].page_number) || passed)) {
+        if (!clock[i].reference && (clock[i].page_number < 0 ||
+                                    !pt_readonly_p(clock[i].page_number) ||
+                                    passed)) {
+            // found a victim
+
             if (clock[i].page_number >= 0) {
                 pt_unset_entry(clock[i].page_number);
-
                 if (pt_readonly_p(clock[i].page_number)) {
                     pm_backup_page(i, clock[i].page_number);
                 }
             }
+
             pt_set_entry(page_number, i);
             clock[i].page_number = page_number;
             return i;
         }
-        clock[i].reference = 0;
+
+        clock[i].reference = 0; // reset reference for second encounter
+
         i++;
-        if (i == NUM_FRAMES) {
+        if (i == NUM_FRAMES)
             passed = true;
-        }
         i %= NUM_FRAMES;
     }
 }
@@ -83,19 +85,19 @@ int page_replacement (unsigned int page_number)
 /* Effectue une lecture à l'adresse logique `laddress`.  */
 char vmm_read (unsigned int laddress)
 {
-    char c = '!';
+    char c;
     read_count++;
-    /* ¡ TODO: COMPLÉTER ! */
-    // calculer le num de page et le num de offset
-    unsigned int page = laddress/PAGE_FRAME_SIZE;
-    unsigned int offset = laddress%PAGE_FRAME_SIZE;
+
+    unsigned int paddress;
+    unsigned int page   = laddress / PAGE_FRAME_SIZE;
+    unsigned int offset = laddress % PAGE_FRAME_SIZE;
 
     int frame = tlb_lookup(page, false);
     if (frame < 0) {
-        // call le shit de tlb miss TODO
+        // tlb miss
         frame = pt_lookup(page);
-        if ( frame < 0) {
-            // page_fault page replacement devrais retourner le frame
+        if (frame < 0) {
+            // page fault
             frame = page_replacement(page);
             pm_download_page(page, frame);
             pt_set_readonly(page, true);
@@ -104,11 +106,10 @@ char vmm_read (unsigned int laddress)
     }
     clock[frame].reference = true;
 
-    int paddress = frame * PAGE_FRAME_SIZE + offset;
+    paddress = frame * PAGE_FRAME_SIZE + offset;
 
     c = pm_read(paddress);
 
-    // TODO: Fournir les arguments manquants.
     vmm_log_command (stdout, "READING",
                      laddress,
                      page,
@@ -123,26 +124,28 @@ char vmm_read (unsigned int laddress)
 void vmm_write (unsigned int laddress, char c)
 {
     write_count++;
-    /* ¡ TODO: COMPLÉTER ! */
-    // calculer le num de page et le num de offset
-    unsigned int page = laddress / PAGE_FRAME_SIZE;
+
+    unsigned int paddress;
+    unsigned int page   = laddress / PAGE_FRAME_SIZE;
     unsigned int offset = laddress % PAGE_FRAME_SIZE;
 
     int frame = tlb_lookup(page, true);
     if (frame < 0) {
+        // tlb miss
         frame = pt_lookup(page);
         if (frame < 0) {
-            // page miss
+            // page fault
             frame = page_replacement(page);
             pm_download_page(page, frame);
             pt_set_readonly(page, false);
         }
         tlb_add_entry(page, frame, pt_readonly_p(page));
     }
-    clock[frame].reference = true;
-    pt_set_readonly(page, true);
 
-    int paddress = frame * PAGE_FRAME_SIZE + offset;
+    clock[frame].reference = true;
+    pt_set_readonly(page, false);
+
+    paddress = frame * PAGE_FRAME_SIZE + offset;
 
     pm_write(paddress, c);
 

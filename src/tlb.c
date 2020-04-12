@@ -1,4 +1,3 @@
-
 #include <stdint.h>
 #include <stdio.h>
 
@@ -35,10 +34,13 @@ static int stack[TLB_NUM_ENTRIES];
 
 void stk_move_to_top (int i) {
     int j;
-    for(j = 0; stack[j]!=i; j++);
-    for(; j>=1; j--) {
-        stack[j] = stack[j-1];
-    }
+
+    for(j = 0; stack[j] != i; j++)
+        ;
+
+    for(; j >= 1; j--)
+        stack[j] = stack[j - 1];
+
     stack[0] = i;
 }
 
@@ -46,12 +48,14 @@ void stk_move_to_top (int i) {
  * Renvoie le `frame_number`, si trouvé, ou un nombre négatif sinon.  */
 static int tlb__lookup (unsigned int page_number, bool write)
 {
-    // TODO: COMPLÉTER CETTE FONCTION.
     for (int i = 0; i < TLB_NUM_ENTRIES; i++) {
-        if (tlb_entries[i].page_number == page_number ) {
-            if (write )
+        if (tlb_entries[i].frame_number >= 0 &&
+            tlb_entries[i].page_number == page_number) {
+            if (write)
                 tlb_entries[i].readonly = false;
-            stk_move_to_top(i);
+
+            stk_move_to_top(i); // update internal stack
+
             return tlb_entries[i].frame_number;
         }
     }
@@ -64,17 +68,18 @@ static void tlb__add_entry (unsigned int page_number,
                             unsigned int frame_number, bool readonly)
 {
     static int init = 0;
+    int i;
 
-    // TODO: COMPLÉTER CETTE FONCTION.
     if (init < TLB_NUM_ENTRIES) {
-        stack[init] = init;
-        stk_move_to_top(init);
-        tlb_entries[init].page_number = page_number;
-        tlb_entries[init].frame_number = frame_number;
-        tlb_entries[init++].readonly = readonly;
+        i = init;
+        stack[init++] = i;
+        stk_move_to_top(i);
+        tlb_entries[i].page_number = page_number;
+        tlb_entries[i].frame_number = frame_number;
+        tlb_entries[i].readonly = readonly;
     } else {
-        stk_move_to_top(stack[TLB_NUM_ENTRIES-1]);
-        int i = stack[0];
+        stk_move_to_top(stack[TLB_NUM_ENTRIES-1]); // remove least used entry
+        i = stack[0];
         tlb_entries[i].page_number = page_number;
         tlb_entries[i].frame_number = frame_number;
         tlb_entries[i].readonly = readonly;
