@@ -50,6 +50,8 @@ static void vmm_log_command (FILE *out, const char *command,
                  page, offset, frame, paddress);
 }
 
+int page_replacement (unsigned int);
+
 /* Effectue une lecture à l'adresse logique `laddress`.  */
 char vmm_read (unsigned int laddress)
 {
@@ -66,9 +68,10 @@ char vmm_read (unsigned int laddress)
         // call le shit de tlb miss TODO
         frame = pt_lookup(page);
         if ( frame < 0) {
-            // page_fault
-            
+            // page_fault page replacement devrais retourner le frame
+            frame = page_replacement(page);
         }
+        tlb_add_entry(page, frame, true);
     }
     clock[page].reference = true;
 
@@ -103,7 +106,9 @@ void vmm_write (unsigned int laddress, char c)
         frame = pt_lookup(page);
         if (frame < 0) {
             // page miss
+            frame = page_replacement(page);
         }
+        tlb_add_entry(page, frame, false);
     }
     clock[page].reference = true;
     clock[page].modify    = true;
