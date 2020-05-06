@@ -1,2 +1,2 @@
 # os-tp3
-third project of operating system class
+third project of operating system
